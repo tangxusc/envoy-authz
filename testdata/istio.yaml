@@ -1,0 +1,50 @@
+#kind: Gateway
+#apiVersion: networking.istio.io/v1alpha3
+#metadata:
+#  name: ingressgateway
+#  namespace: istio-system
+#spec:
+#  servers:
+#    - hosts:
+#        - '*'
+#      port:
+#        name: http
+#        number: 80
+#        protocol: HTTP
+#  selector:
+#    istio: ingressgateway
+#---
+#声明路由
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: auth
+  namespace: test
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-system/ingressgateway
+  http:
+    - match:
+        - uri:
+            prefix: /web #路由
+      rewrite:
+        uri: "/" #重写url
+      route:
+        - destination:
+            host: web
+            subset: v1
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: auth
+  namespace: test
+spec:
+  host: web
+  subsets:
+    - name: v1
+      labels:
+        app: envoy-authz
+        version: v1
